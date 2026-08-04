@@ -35,5 +35,20 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/finpay-api:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/finpay-api:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/basic-project:latest
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/basic-project:latest
+
+            docker stop basic-project || true
+            docker rm basic-project || true
+
+            docker image prune -f
+
+            docker run -d --name basic-project --restart unless-stopped -p 8000:8000 ${{ secrets.DOCKERHUB_USERNAME }}/basic-project:latest
