@@ -1,4 +1,3 @@
-import logfire
 from typing import List
 from fastapi import FastAPI, Depends, HTTPException
 from sqlmodel import Session, select
@@ -6,13 +5,7 @@ from app.database import get_db, engine  # Ensure engine is imported to log SQL 
 from app.models import Hero
 from app.schemas import HeroCreate, HeroRead
 
-logfire.configure()
-
-app = FastAPI(title="FastAPI with Pydantic Logfire")
-
-logfire.instrument_fastapi(app)
-
-logfire.instrument_sqlalchemy(engine)
+app = FastAPI(title="FastAPI")
 
 @app.post("/heroes/", response_model=HeroRead)
 def create_hero(hero_in: HeroCreate, session: Session = Depends(get_db)):

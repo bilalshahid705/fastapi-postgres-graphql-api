@@ -62,7 +62,6 @@ source = { virtual = "." }
 dependencies = [
     { name = "alembic" },
     { name = "fastapi" },
-    { name = "logfire", extra = ["fastapi", "sqlalchemy"] },
     { name = "psycopg", extra = ["binary"] },
     { name = "pydantic" },
     { name = "pydantic-settings" },
@@ -74,7 +73,6 @@ dependencies = [
 requires-dist = [
     { name = "alembic", specifier = ">=1.18.5" },
     { name = "fastapi", specifier = ">=0.141.1" },
-    { name = "logfire", extras = ["fastapi", "sqlalchemy"], specifier = ">=4.39.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.4" },
     { name = "pydantic", specifier = ">=2.13.4" },
     { name = "pydantic-settings", specifier = ">=2.14.2" },
