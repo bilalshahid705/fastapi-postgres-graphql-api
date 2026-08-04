@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Build and Deploy Docker Image
 
 on:
   push:
@@ -12,13 +12,6 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-
-      - name: Create .env file
-        run: |
-          cat <<EOF > .env
-          DATABASE_URL=${{ secrets.DATABASE_URL }}
-          DEBUG=True
-          EOF
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -36,6 +29,9 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/basic-project:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/basic-project:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.2.2
@@ -44,7 +40,16 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            set -e
+
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+            mkdir -p ~/basic-project
+
+            cat > ~/basic-project/.env <<EOF
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            DEBUG=False
+            EOF
 
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/basic-project:latest
 
@@ -53,4 +58,4 @@ jobs:
 
             docker image prune -f
 
-            docker run -d --name basic-project --restart unless-stopped -p 8000:8000 ${{ secrets.DOCKERHUB_USERNAME }}/basic-project:latest
+            docker run -d --name basic-project --restart unless-stopped --env-file ~/basic-project/.env -p 8000:8000 ${{ secrets.DOCKERHUB_USERNAME }}/basic-project:latest
