@@ -8,3 +8,4 @@ class Hero(SQLModel, table=True):
     name: str = Field(index=True)
     secret_name: str
     age: Optional[int] = Field(default=None, index=True)
+    nickname: Optional[str] = Field(default=None, nullable=True)
