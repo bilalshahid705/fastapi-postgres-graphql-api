@@ -5,8 +5,10 @@ from sqlalchemy import pool
 
 from alembic import context
 from app.config import settings
-import app.models
+from app.models import *
 from sqlmodel import SQLModel
+
+print(SQLModel.metadata.tables.keys())
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
