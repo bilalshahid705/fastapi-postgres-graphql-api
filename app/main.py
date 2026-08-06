@@ -1,64 +1,63 @@
 from typing import List
 from fastapi import FastAPI, Depends, HTTPException
 from sqlmodel import Session, select
-from app.database import get_db, engine  # Ensure engine is imported to log SQL queries
-from app.models import Hero
-from app.schemas import HeroCreate, HeroRead
+from appcore.database import get_db, engine
+from app.models import User
+from app.schemas import UserCreate, UserRead
 
 app = FastAPI(title="FastAPI")
 
-@app.post("/heroes/", response_model=HeroRead)
-def create_hero(hero_in: HeroCreate, session: Session = Depends(get_db)):
-    # logfire.info("Creating a new hero: {name}", name=hero_in.name)
+@app.post("/users/", response_model=UserRead)
+def create_user(user_in: UserCreate, session: Session = Depends(get_db)):
     
-    db_hero = Hero.model_validate(hero_in)
-    session.add(db_hero)
+    db_user = User.model_validate(user_in)
+    session.add(db_user)
     session.commit()
-    session.refresh(db_hero)
+    session.refresh(db_user)
     
-    return db_hero
+    return db_user
 
-@app.get("/heroes/", response_model=List[HeroRead])
-def read_heroes(session: Session = Depends(get_db)):
-    heroes = session.exec(select(Hero)).all()
-    return heroes
+@app.get("/users/", response_model=List[UserRead])
+def read_users(session: Session = Depends(get_db)):
+    users = session.exec(select(User)).all()
+    return users
 
 
-@app.put("/heroes/{hero_id}", response_model=HeroRead)
-def update_hero(
-    hero_id: int,
-    hero_in: HeroCreate,
+@app.put("/users/{user_id}", response_model=UserRead)
+def update_user(
+    user_id: int,
+    user_in: UserCreate,
     session: Session = Depends(get_db)
 ):
-    hero = session.get(Hero, hero_id)
+    user = session.get(User, user_id)
 
-    if not hero:
-        raise HTTPException(status_code=404, detail="Hero not found")
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
 
-    hero_data = hero_in.model_dump()
+    user_data = user_in.model_dump()
 
-    for key, value in hero_data.items():
-        setattr(hero, key, value)
+    for key, value in user_data.items():
+        setattr(user, key, value)
 
-    session.add(hero)
+    session.add(user)
     session.commit()
-    session.refresh(hero)
+    session.refresh(user)
 
-    return hero
+    return user
 
 
 
-@app.delete("/heroes/{hero_id}")
-def delete_hero(
-    hero_id: int,
+@app.delete("/users/{user_id}")
+def delete_user(
+    user_id: int,
     session: Session = Depends(get_db)
 ):
-    hero = session.get(Hero, hero_id)
+    user = session.get(User, user_id)
 
-    if not hero:
-        raise HTTPException(status_code=404, detail="Hero not found")
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
 
-    session.delete(hero)
+    session.delete(user)
     session.commit()
 
-    return {"message": "Hero deleted successfully"}
+    return {"message": "User deleted successfully"}
