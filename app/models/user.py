@@ -1,5 +1,6 @@
 from typing import Optional
 from sqlmodel import SQLModel, Field
+from pydantic import EmailStr
 
 class User(SQLModel, table=True):
     __tablename__ = "users"

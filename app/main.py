@@ -1,63 +1,46 @@
-from typing import List
-from fastapi import FastAPI, Depends, HTTPException
-from sqlmodel import Session, select
-from appcore.database import get_db, engine
-from app.models import User
-from app.schemas import UserCreate, UserRead
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="FastAPI")
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from sqlmodel import text, Session
+from strawberry.fastapi import GraphQLRouter
+from app.graphql.graphql_schema import graphql_schema
 
-@app.post("/users/", response_model=UserRead)
-def create_user(user_in: UserCreate, session: Session = Depends(get_db)):
-    
-    db_user = User.model_validate(user_in)
-    session.add(db_user)
-    session.commit()
-    session.refresh(db_user)
-    
-    return db_user
-
-@app.get("/users/", response_model=List[UserRead])
-def read_users(session: Session = Depends(get_db)):
-    users = session.exec(select(User)).all()
-    return users
+from app.api import api_router
+from app.core.config import settings
+from app.core.database import engine
 
 
-@app.put("/users/{user_id}", response_model=UserRead)
-def update_user(
-    user_id: int,
-    user_in: UserCreate,
-    session: Session = Depends(get_db)
-):
-    user = session.get(User, user_id)
-
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    user_data = user_in.model_dump()
-
-    for key, value in user_data.items():
-        setattr(user, key, value)
-
-    session.add(user)
-    session.commit()
-    session.refresh(user)
-
-    return user
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    with Session(engine) as session:
+        session.exec(text("SELECT 1"))
+    yield
 
 
+async def get_context():
+    with Session(engine) as session:
+        yield {
+            "db": session
+        }
 
-@app.delete("/users/{user_id}")
-def delete_user(
-    user_id: int,
-    session: Session = Depends(get_db)
-):
-    user = session.get(User, user_id)
 
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+app = FastAPI(
+    title="FastAPI E-commerce API",
+    version="1.0.0",
+    lifespan=lifespan,
+)
 
-    session.delete(user)
-    session.commit()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://localhost:8000", "https://127.0.0.1:8000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
-    return {"message": "User deleted successfully"}
+
+graphql_app = GraphQLRouter(graphql_schema, context_getter=get_context)
+
+app.include_router(graphql_app, prefix="/graphql")
+app.include_router(api_router, prefix="/api/v1")
