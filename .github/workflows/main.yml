@@ -49,6 +49,7 @@ jobs:
             cat > ~/basic-project/.env <<EOF
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             DEBUG=False
+            VALKEY_URL=${{ secrets.VALKEY_URL }}
             EOF
 
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/basic-project:latest
