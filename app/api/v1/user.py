@@ -25,6 +25,8 @@ async def read_users(session: Session = Depends(get_db)):
 
     cached_users = await get_cache(cache_key)
 
+    print("cached_users:", cached_users)
+
     if cached_users is not None:
         return cached_users
 
