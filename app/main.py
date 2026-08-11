@@ -1,64 +1,46 @@
-from typing import List
-from fastapi import FastAPI, Depends, HTTPException
-from sqlmodel import Session, select
-from app.database import get_db, engine  # Ensure engine is imported to log SQL queries
-from app.models import Hero
-from app.schemas import HeroCreate, HeroRead
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="FastAPI")
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from sqlmodel import text, Session
+from strawberry.fastapi import GraphQLRouter
+from app.graphql.graphql_schema import graphql_schema
 
-@app.post("/heroes/", response_model=HeroRead)
-def create_hero(hero_in: HeroCreate, session: Session = Depends(get_db)):
-    # logfire.info("Creating a new hero: {name}", name=hero_in.name)
-    
-    db_hero = Hero.model_validate(hero_in)
-    session.add(db_hero)
-    session.commit()
-    session.refresh(db_hero)
-    
-    return db_hero
-
-@app.get("/heroes/", response_model=List[HeroRead])
-def read_heroes(session: Session = Depends(get_db)):
-    heroes = session.exec(select(Hero)).all()
-    return heroes
+from app.api import api_router
+from app.core.config import settings
+from app.core.database import engine
 
 
-@app.put("/heroes/{hero_id}", response_model=HeroRead)
-def update_hero(
-    hero_id: int,
-    hero_in: HeroCreate,
-    session: Session = Depends(get_db)
-):
-    hero = session.get(Hero, hero_id)
-
-    if not hero:
-        raise HTTPException(status_code=404, detail="Hero not found")
-
-    hero_data = hero_in.model_dump()
-
-    for key, value in hero_data.items():
-        setattr(hero, key, value)
-
-    session.add(hero)
-    session.commit()
-    session.refresh(hero)
-
-    return hero
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    with Session(engine) as session:
+        session.exec(text("SELECT 1"))
+    yield
 
 
+async def get_context():
+    with Session(engine) as session:
+        yield {
+            "db": session
+        }
 
-@app.delete("/heroes/{hero_id}")
-def delete_hero(
-    hero_id: int,
-    session: Session = Depends(get_db)
-):
-    hero = session.get(Hero, hero_id)
 
-    if not hero:
-        raise HTTPException(status_code=404, detail="Hero not found")
+app = FastAPI(
+    title="FastAPI E-commerce API",
+    version="1.0.0",
+    lifespan=lifespan,
+)
 
-    session.delete(hero)
-    session.commit()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://localhost:8000", "https://127.0.0.1:8000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
-    return {"message": "Hero deleted successfully"}
+
+graphql_app = GraphQLRouter(graphql_schema, context_getter=get_context)
+
+app.include_router(graphql_app, prefix="/graphql")
+app.include_router(api_router, prefix="/api/v1")
