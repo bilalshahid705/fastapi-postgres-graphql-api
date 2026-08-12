@@ -5,7 +5,7 @@ from app.core.database import get_db, engine
 from app.models import User
 from app.schemas import UserCreate, UserRead
 from app.graphql.graphql_schema import graphql_schema
-from app.core.cache import get_cache, set_cache
+# from app.core.cache import get_cache, set_cache
 
 router = APIRouter(tags=["Users"])
 
@@ -21,17 +21,17 @@ def create_user(user_in: UserCreate, session: Session = Depends(get_db)):
 
 @router.get("/users/", response_model=List[UserRead])
 async def read_users(session: Session = Depends(get_db)):
-    cache_key = "users:all"
+    # cache_key = "users:all"
 
-    cached_users = await get_cache(cache_key)
+    # cached_users = await get_cache(cache_key)
 
-    print("cached_users:", cached_users)
+    # print("cached_users:", cached_users)
 
-    if cached_users is not None:
-        return cached_users
+    # if cached_users is not None:
+    #     return cached_users
 
     users = session.exec(select(User)).all()
-    await set_cache(cache_key, users, expire=600)
+    # await set_cache(cache_key, users, expire=600)
     return users
 
 
