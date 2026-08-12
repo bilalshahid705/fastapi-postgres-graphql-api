@@ -2,6 +2,7 @@ import json
 from redis.asyncio import Redis
 from app.core.config import settings
 
+print("settings.VALKEY_URL:", settings.VALKEY_URL)
 
 redis_client = Redis.from_url(
     settings.VALKEY_URL,
@@ -11,7 +12,12 @@ redis_client = Redis.from_url(
 
 
 async def get_cache(key: str):
+
+    print(f"Getting cache for key: {key}")
     value = await redis_client.get(key)
+
+
+    print(f"Getting cache for value: {value}")
 
     if value is None:
         return None
