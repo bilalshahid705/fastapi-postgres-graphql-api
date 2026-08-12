@@ -53,10 +53,10 @@ jobs:
 
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/basic-project:latest
 
-            docker stop basic-project || true
-            docker rm basic-project || true
+            docker stop basic-project 2>/dev/null || true
+            docker rm basic-project 2>/dev/null || true
 
-            docker run --rm --env-file ~/basic-project/.env bilalshahid705/basic-project:latest uv run alembic upgrade head
+            docker run --rm --env-file ~/basic-project/.env ${{ secrets.DOCKERHUB_USERNAME }}/basic-project:latest uv run alembic upgrade head
 
             docker run -d --name basic-project --restart unless-stopped --env-file ~/basic-project/.env -p 8000:8000 ${{ secrets.DOCKERHUB_USERNAME }}/basic-project:latest
 
