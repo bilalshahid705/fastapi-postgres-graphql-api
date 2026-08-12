@@ -29,7 +29,6 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/basic-project:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/basic-project:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -53,8 +52,8 @@ jobs:
 
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/basic-project:latest
 
-            docker stop basic-project 2>/dev/null || true
-            docker rm basic-project 2>/dev/null || true
+            docker stop basic-project || true
+            docker rm basic-project || true
 
             docker run --rm --env-file ~/basic-project/.env ${{ secrets.DOCKERHUB_USERNAME }}/basic-project:latest uv run alembic upgrade head
 
