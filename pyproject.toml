@@ -1,5 +1,5 @@
 [project]
-name = "basic-project"
+name = "fastapi-postgres-graphql-api"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -16,4 +16,5 @@ dependencies = [
     "graphql-client>=0.3.0",
     "valkey-glide>=2.5.1",
     "redis>=8.1.0",
+    "valkey>=6.1.1",
 ]

@@ -28,7 +28,7 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/basic-project:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/fastapi-postgres-graphql-api:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -43,20 +43,20 @@ jobs:
 
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-            mkdir -p ~/basic-project
+            mkdir -p ~/fastapi-postgres-graphql-api
 
-            cat > ~/basic-project/.env <<EOF
+            cat > ~/fastapi-postgres-graphql-api/.env <<EOF
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             DEBUG=False
             EOF
 
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/basic-project:latest
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/fastapi-postgres-graphql-api:latest
 
-            docker stop basic-project || true
-            docker rm basic-project || true
+            docker stop fastapi-postgres-graphql-api || true
+            docker rm fastapi-postgres-graphql-api || true
 
-            docker run --rm --env-file ~/basic-project/.env ${{ secrets.DOCKERHUB_USERNAME }}/basic-project:latest uv run alembic upgrade head
+            docker run --rm --env-file ~/fastapi-postgres-graphql-api/.env ${{ secrets.DOCKERHUB_USERNAME }}/fastapi-postgres-graphql-api:latest uv run alembic upgrade head
 
-            docker run -d --name basic-project --restart unless-stopped --env-file ~/basic-project/.env -p 8000:8000 ${{ secrets.DOCKERHUB_USERNAME }}/basic-project:latest
+            docker run -d --name fastapi-postgres-graphql-api --restart unless-stopped --env-file ~/fastapi-postgres-graphql-api/.env -p 8000:8000 ${{ secrets.DOCKERHUB_USERNAME }}/fastapi-postgres-graphql-api:latest
 
             docker image prune -f
